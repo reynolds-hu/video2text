@@ -1,0 +1,2 @@
+# video2text
+支持bilibili、Youtube视频转文字提取及导出，及调用大语言模型进行结构化整理及总结

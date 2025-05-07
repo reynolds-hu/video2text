@@ -1,30 +1,38 @@
+import os
 from openai import OpenAI
+from dotenv import load_dotenv
 
-def process_with_llm(text_content):
+# 加载环境变量
+load_dotenv()
+
+# 初始化OpenAI客户端
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+def process_with_llm(text, prompt):
     """
-    使用大语言模型处理文本
+    使用LLM处理文本
+    :param text: 要处理的文本
+    :param prompt: 处理提示词
+    :return: 处理后的文本
     """
-    client = OpenAI()
-    
-    # 构建提示词
-    prompt = f"""
-    请将以下字幕内容进行美化和结构化处理：
-    1. 删除重复内容
-    2. 合并相似内容
-    3. 添加适当的段落和标题
-    4. 优化语言表达
-    
-    字幕内容：
-    {text_content}
-    """
-    
-    # 调用API
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "你是一个专业的文本编辑助手"},
-            {"role": "user", "content": prompt}
-        ]
-    )
-    
-    return response.choices[0].message.content 
+    try:
+        # 构建完整的提示词
+        full_prompt = f"{prompt}\n\n原文：\n{text}"
+        
+        # 调用OpenAI API
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo-16k",  # 使用支持更长文本的模型
+            messages=[
+                {"role": "system", "content": "你是一个专业的文本优化助手，擅长整理和优化文本内容。"},
+                {"role": "user", "content": full_prompt}
+            ],
+            temperature=0.7,  # 适当调整创造性
+            max_tokens=4000,  # 设置较大的输出限制
+        )
+        
+        # 返回处理后的文本
+        return response.choices[0].message.content.strip()
+        
+    except Exception as e:
+        print(f"LLM处理文本时出错: {str(e)}")
+        return text  # 如果处理失败，返回原始文本 

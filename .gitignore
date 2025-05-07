@@ -172,3 +172,13 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# 忽略outputs目录及其内容
+outputs/
+temp_videos/
+
+# IDE相关
+.idea/
+.vscode/
+*.swp
+*.swo

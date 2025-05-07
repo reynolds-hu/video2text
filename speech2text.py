@@ -7,6 +7,7 @@ class WhisperModel:
     def __init__(self):
         self.model = None
         self.device = self._get_device()
+        self.batch_size = 4  # 增加批处理大小
     
     def _get_device(self):
         """
@@ -18,13 +19,22 @@ class WhisperModel:
             gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1024**3  # 转换为GB
             print(f"检测到GPU: {gpu_name}")
             print(f"GPU显存: {gpu_memory:.1f}GB")
+            
+            # 根据显存大小调整批处理大小
+            if gpu_memory >= 8:  # RTX 4060 或更高
+                self.batch_size = 4
+            elif gpu_memory >= 6:
+                self.batch_size = 2
+            else:
+                self.batch_size = 1
+                
             return "cuda"
         else:
             print("未检测到GPU，将使用CPU")
             print(f"系统信息: {platform.platform()}")
             return "cpu"
     
-    def load_whisper(self, model="small"):
+    def load_whisper(self, model="medium"):  # 默认使用medium模型
         """
         加载Whisper模型
         :param model: 模型大小，可选 "tiny", "base", "small", "medium", "large"
@@ -39,6 +49,7 @@ class WhisperModel:
                 allocated = torch.cuda.memory_allocated() / 1024**3
                 reserved = torch.cuda.memory_reserved() / 1024**3
                 print(f"GPU显存使用: {allocated:.1f}GB (已分配) / {reserved:.1f}GB (已保留)")
+                print(f"批处理大小: {self.batch_size}")
                 
         except Exception as e:
             print(f"加载Whisper模型时出错: {str(e)}")
@@ -67,16 +78,20 @@ class WhisperModel:
             # 存储所有文本
             all_text = []
             
-            # 处理每个音频文件
-            for i, audio_file in enumerate(audio_files, 1):
-                print(f"正在处理音频文件 {i}/{total_files}: {audio_file}")
-                audio_path = os.path.join(foldername, audio_file)
-                result = self.model.transcribe(
-                    audio_path,
-                    language="zh",
-                    initial_prompt=prompt
-                )
-                all_text.append(result["text"])
+            # 批量处理音频文件
+            for i in range(0, total_files, self.batch_size):
+                batch_files = audio_files[i:i + self.batch_size]
+                print(f"正在处理音频文件 {i+1}-{min(i+self.batch_size, total_files)}/{total_files}")
+                
+                # 处理每个批次
+                for audio_file in batch_files:
+                    audio_path = os.path.join(foldername, audio_file)
+                    result = self.model.transcribe(
+                        audio_path,
+                        language="zh",
+                        initial_prompt=prompt
+                    )
+                    all_text.append(result["text"])
                 
                 # 如果使用GPU，显示显存使用情况
                 if self.device == "cuda":
@@ -96,7 +111,7 @@ class WhisperModel:
 # 创建全局实例
 whisper_model = WhisperModel()
 
-def load_whisper(model="small"):
+def load_whisper(model="medium"):  # 默认使用medium模型
     """全局加载函数"""
     whisper_model.load_whisper(model)
 

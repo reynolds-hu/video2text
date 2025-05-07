@@ -1,0 +1,6 @@
+you-get==0.4.1650
+moviepy==1.0.3
+librosa==0.10.1
+soundfile==0.12.1
+torch==2.1.0
+openai-whisper==20231117 

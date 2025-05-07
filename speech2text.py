@@ -31,7 +31,7 @@ class WhisperModel:
         
         try:
             # 创建输出目录
-            output_dir = "outputs"
+            output_dir = os.path.join(os.path.dirname(__file__), "outputs")
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
             

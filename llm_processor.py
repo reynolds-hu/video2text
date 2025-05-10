@@ -91,7 +91,8 @@ class SparkAPI:
             data = {
                 "header": {
                     "app_id": self.appid,
-                    "uid": "user_001"
+                    "uid": "user_001",
+                    "protocol_type": "spark"
                 },
                 "parameter": {
                     "chat": {
@@ -101,6 +102,7 @@ class SparkAPI:
                         "presence_penalty": 1,
                         "frequency_penalty": 0.02,
                         "top_k": 5,
+                        "chat_id": f"chat_{int(time.time())}",
                         "tools": [
                             {
                                 "type": "web_search",
